@@ -102,13 +102,49 @@
     \item shared\_ptr
     \item basic\_string
     \end{itemize}
-  \item add attribute noreturn to throw functions
+  \item add attribute noreturn to non-returning functions
     \begin{itemize}
     \item \_\_locale, vector, deque, future, regex, system\_error, etc.
     \item important for compiler optimizations
     \item remove false positives in static analysis tools
     \end{itemize}
   \end{itemize}
+}
+
+\frame{\frametitle{Contributions to libc++ and libstdc++ (2)}
+  \begin{itemize}
+  \item Convert to introsort*
+  \item Sorting technique, which begins with quicksort and switches to heapsort after recursion reaches a threshold
+  \item Worst case complexity of O(NlogN)
+  \item Eliminate recursion
+  \item Replaced memory Intensive recursive calls with stack – std::stack uses std::deque, which uses std::algorithm :(
+  \item Improved worst case time complexity by a factor of 10 – https://reviews.llvm.org/D36423
+  \end{itemize}
+}
+
+\frame{\frametitle{Issues with std::sort (libc++)}
+\begin{figure}
+    \includegraphics[width=\textwidth]{before.png}
+\end{figure}
+}
+
+\frame{\frametitle{Sorting Results Plot (With std-benchmark)}
+\begin{figure}
+    \includegraphics[width=\textwidth]{after.png}
+\end{figure}
+}
+
+\frame{\frametitle{Size (in bytes) of empty containers 64 bit}
+\begin{figure}
+    \includegraphics[width=\textwidth]{container_size.png}
+\end{figure}
+}
+
+
+\frame{\frametitle{Lessons learned (containers) optimizing destructor of string}
+\begin{figure}
+    \includegraphics[width=\textwidth]{string.png}
+\end{figure}
 }
 
 \frame{\frametitle{Contributions to libc++ and libstdc++ (2)}
