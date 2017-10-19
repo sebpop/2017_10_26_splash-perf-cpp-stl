@@ -57,8 +57,7 @@
     \end{itemize}
   \item analyze trade-offs of caching previous results
     \begin{itemize}
-    \item use more memory vs. less computation
-    \item use more computation vs. less memory
+    \item use more memory vs. less computation (and vice versa)
     \end{itemize}
   \end{itemize}
 }
@@ -79,7 +78,7 @@
   \item always analyze software performance to validate your choice
   \item c++ std libs still not used as much as intended? / expected?
     \begin{itemize}
-    \item c++ power users implement all critical data structures
+    \item c++ power users implement a lot of critical data structures
     \item libc++ is cold on Android system wide profiles
     \item we contributed several changes to improve performance
     \end{itemize}
@@ -98,7 +97,7 @@
     \item replace byte by byte compare with call to memchr and memcmp
     \item 12x speedup on std-benchmark {\footnote{https://github.com/hiraditya/std-benchmark}}
     \end{itemize}
-  \item add inline to ctor/dtor
+  \item inline ctor/dtor
     \begin{itemize}
     \item shared\_ptr
     \item basic\_string
@@ -119,7 +118,7 @@
     \item quicksort with tail recursion elimination: quadratic worst case
     \item reimplemented as introsort: begin with quicksort, switch to heapsort
       when recursion depth goes beyond a threshold
-    \item 16x speedup on std-benchmark {\footnote{https://github.com/hiraditya/std-benchmark}}
+    \item 16x speedup in the worst case (std-benchmark {\footnote{https://github.com/hiraditya/std-benchmark}})
     \end{itemize}
   \item 
   \end{itemize}
