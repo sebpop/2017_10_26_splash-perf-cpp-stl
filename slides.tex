@@ -13,32 +13,86 @@
 
 \frame{\frametitle{Agenda}
   \begin{itemize}
+  \item C++ standard template libraries
   \item software performance analysis
-  \item how to improve software performance
-  \item C++ standard libraries
-  \item current improvements to libc++ and libstdc++
+  \item improvements to libc++ and libstdc++ performance
   \end{itemize}
 }
 
+\frame{\frametitle{C++ Standard Template Libraries}
+  \begin{itemize}
+  \item STL is easy to use
+    \begin{itemize}
+    \item standard interface: portable
+    \item easy to change data types: list, vector, deque, map, etc.
+    \item easy to change algorithms: iterators
+    \end{itemize}
+  \item complexity specified by standard
+  \item performance left to implementation
+  \end{itemize}
+}
+
+\frame{\frametitle{Performance of STL implementations}
+  \begin{itemize}
+  \item performance and memory usage depend on
+    \begin{itemize}
+    \item implementation: libc++ vs. libstdc++ vs. MSVC, etc.
+    \item container type
+    \item inefficiencies in implementations
+    \end{itemize}
+  \item always analyze software performance to validate your choice
+  \end{itemize}
+
+  \begin{figure}
+    \caption{Size in bytes of empty containers on x86\_64}
+    \includegraphics[width=\textwidth]{container_size.png}
+  \end{figure}
+}
+
+%% \frame{\frametitle{Uses of STL implementations}
+%%   Why are STL libs not used as much as intended? / expected?
+%%   \begin{itemize}
+%%   \item c++ power users implement a lot of critical data structures
+%%   \item libc++ is cold on Android system wide profiles
+%%   \item we contributed several changes to improve performance of libc++ and
+%%     libstdc++ implementations
+%%   \end{itemize}
+%% }
+
 \frame{\frametitle{Software Performance Analysis}
   \begin{itemize}
-  \item identify hot functions (from profiles)
-    \begin{itemize}
-    \item linux-perf: cycles, instructions, HW counters
-    \item valgrind: cachegrind (R/W/Instrs), callgrind
-    \end{itemize}
-  \item inspect hot path
-    \begin{itemize}
-    \item source code
-    \item assembly code
-    \item compiler IR
-    \end{itemize}
+  \item identify hot functions from execution profiles
+  \item inspect hot path: unit-benchmarking
   \item identify resource utilization on hot path
-    \begin{itemize}
-    \item CPU,
-    \item memory,
-    \item bus and caches: loads/stores, \ldots{}
-    \end{itemize}
+  \end{itemize}
+}
+
+\frame{\frametitle{Profiling: identify hot path}
+  \begin{itemize}
+  \item linux-perf: cycles, instructions, HW counters
+  \item valgrind: cachegrind (R/W/Instrs), callgrind
+  \item oprofile
+  \end{itemize}
+}
+
+\frame{\frametitle{Unit-benchmarking: inspect hot path}
+  unit-benchmarking is unit-testing for performance
+  \begin{itemize}
+  \item set-up data structures in memory
+  \item call hot function
+  \item execute hot function until performance measures stabilize \footnote{https://github.com/google/benchmark}
+  \end{itemize}
+  \vspace{1cm}
+  
+  check performance of a single hot operation: less noise, keep focus
+}
+
+\frame{\frametitle{Analyze resource utilization on hot path}
+  Inspect:
+  \begin{itemize}
+  \item source code, compiler IR, assembly code
+  \item CPU usage, instructions used and their latencies
+  \item memory bus and caches: loads/stores, spills, cache misses
   \end{itemize}
 }
 
@@ -54,6 +108,7 @@
     \begin{itemize}
     \item change data structures
     \item change algorithms
+    \item change STL implementations
     \end{itemize}
   \item analyze trade-offs of caching previous results
     \begin{itemize}
@@ -62,35 +117,13 @@
   \end{itemize}
 }
 
-\frame{\frametitle{C++ Standard Libraries}
-  \begin{itemize}
-  \item for most developers c++ standard library is a black box with a standard interface
-    \begin{itemize}
-    \item easy to change data types: list, vector, deque, map, etc.
-    \item easy to change algorithms: iterators
-    \end{itemize}
-  \item performance and memory usage depend on
-    \begin{itemize}
-    \item implementation: libc++ vs. libstdc++ vs. MSVC
-    \item container type
-    \item genericity of implementations: locales in string algorithms
-    \end{itemize}
-  \item always analyze software performance to validate your choice
-  \item c++ std libs still not used as much as intended? / expected?
-    \begin{itemize}
-    \item c++ power users implement a lot of critical data structures
-    \item libc++ is cold on Android system wide profiles
-    \item we contributed several changes to improve performance
-    \end{itemize}
-  \end{itemize}
-}
 
-\frame{\frametitle{Contributions to libc++ and libstdc++}
+\frame{\frametitle{Our contributions to improve performance of libc++ and libstdc++}
   \begin{itemize}
   \item string to int value parsing: xsgetn in libc++
     \begin{itemize}
     \item replace byte by byte copy with call to libc memcpy
-    \item
+    \item important speedup on proprietary benchmark
     \end{itemize}
   \item std::string.find() in libc++ and libstdc++
     \begin{itemize}
@@ -111,14 +144,20 @@
   \end{itemize}
 }
 
-\frame{\frametitle{Contributions to libc++ and libstdc++ (2)}
+\frame{\frametitle{std::sort (libc++)}
   \begin{itemize}
-  \item Convert to introsort*
+  \item Convert to introsort
   \item Sorting technique, which begins with quicksort and switches to heapsort after recursion reaches a threshold
   \item Worst case complexity of O(NlogN)
   \item Eliminate recursion
-  \item Replaced memory Intensive recursive calls with stack – std::stack uses std::deque, which uses std::algorithm :(
+  \item Replaced memory intensive recursive calls with stack – std::stack uses std::deque, which uses std::algorithm
   \item Improved worst case time complexity by a factor of 10 – https://reviews.llvm.org/D36423
+
+  \item quicksort with tail recursion elimination: quadratic worst case
+  \item reimplemented as introsort: begin with quicksort, switch to heapsort
+    when recursion depth goes beyond a threshold
+  \item 16x speedup in the worst case (std-benchmark {\footnote{https://github.com/hiraditya/std-benchmark}})
+
   \end{itemize}
 }
 
@@ -134,30 +173,12 @@
 \end{figure}
 }
 
-\frame{\frametitle{Size (in bytes) of empty containers 64 bit}
-\begin{figure}
-    \includegraphics[width=\textwidth]{container_size.png}
-\end{figure}
-}
 
 
 \frame{\frametitle{Lessons learned (containers) optimizing destructor of string}
 \begin{figure}
     \includegraphics[width=\textwidth]{string.png}
 \end{figure}
-}
-
-\frame{\frametitle{Contributions to libc++ and libstdc++ (2)}
-  \begin{itemize}
-  \item std::sort reimplement in libc++
-    \begin{itemize}
-    \item quicksort with tail recursion elimination: quadratic worst case
-    \item reimplemented as introsort: begin with quicksort, switch to heapsort
-      when recursion depth goes beyond a threshold
-    \item 16x speedup in the worst case (std-benchmark {\footnote{https://github.com/hiraditya/std-benchmark}})
-    \end{itemize}
-  \item 
-  \end{itemize}
 }
 
 
